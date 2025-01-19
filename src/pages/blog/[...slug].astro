@@ -1,6 +1,9 @@
 ---
 import { CollectionEntry, getCollection } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
+import Heading from '../../layouts/Heading.astro';
+import Paragraph from '../../layouts/Paragraph.astro';
+import Code from '../../layouts/Code.astro';
 
 const posts = await getCollection('blog');
 type Props = CollectionEntry<'blog'>;
@@ -9,8 +12,15 @@ const { slug } = Astro.params;
 const post = posts.find((page) => page.slug === slug);
 if (!post) return Astro.redirect("/404");
 const { Content } = await post.render();
+
+export function getStaticPaths() {
+  return [
+    {params: {slug: 'first-post'}},
+    {params: {slug: 'musl-and-ml'}},
+  ];
+}
 ---
 
 <BlogPost {...post.data}>
-	<Content />
+	<Content components={{ h2: Heading, p: Paragraph, code: Code }} />
 </BlogPost>

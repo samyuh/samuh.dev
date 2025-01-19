@@ -10,6 +10,6 @@ import tailwind from "@astrojs/tailwind";
 export default defineConfig({
   site: 'https://samuh.dev',
   integrations: [mdx(), sitemap(), tailwind()],
-  output: "server",
-  adapter: cloudflare()
+  adapter: cloudflare(),
+  output: "hybrid"
 });
