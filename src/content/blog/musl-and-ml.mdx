@@ -1,0 +1,38 @@
+---
+title: 'Musl and Machine Learning Systems'
+description: 'Exploring the challenges and solutions when integrating musl with machine learning systems'
+pubDate: 'Jan 19 2025'
+---
+
+Musl is a lightweight implementation of the C standard library designed to be simple, small, and efficient. It provides the essential components needed for systems programming and is focused on minimizing overhead and complexity. By offering a smaller memory footprint compared to other standard libraries like glibc (GNU C Library), musl is increasingly favored in environments where resources are limited, or performance is critical, such as embedded devices. It is especially popular in containerized environments like Docker, where the size and efficiency of the image are paramount. 
+
+On the other hand, machine learning, particularly deep learning, has become a foundational component of many modern applications. Whether it’s training neural networks or executing inference tasks, machine learning workloads often require significant computing resources, vast amounts of memory, and an efficient execution environment.Machine learning needs to process large datasets, run numerous matrix multiplications, and execute parallel computations. This requires optimized libraries, tools, and frameworks like PyTorch, scikit-learn, etc. along with the underlying system libraries that help ensure that the code runs as efficiently as possible.
+
+## So, in the end what is the connection between them?
+At first glance, it might seem that musl and machine learning belong to completely different realms. However, the relation between them is becoming more apparent, especially as machine learning shifts toward more resource-efficient and edge-computing environments. Many machine learning systems today, including those built with frameworks like TensorFlow and PyTorch, often rely on CPython for development and deployment. As these systems are increasingly used in embedded and resource-constrained environments, such as IoT devices, the underlying system's C library (whether glibc or musl) becomes crucial. 
+
+## However, there are many problems...
+
+Integrating musl into machine learning systems comes with certain challenges. The most notable is compatibility. Since many machine learning and data processing libraries are optimized for glibc, certain features and packages, may require additional effort to work seamlessly in a musl-based environment. 
+
+Not long ago, we migrated the docker images used by our java application from a glibc-based image (Red Hat) to a musl-based image (Alpine). While this migration presented several challenges, one of the most critical issues surfaced recently. The problem occurred when we attempted to import a Parquet data source from a file that had been compressed using the Snappy algorithm. We encountered the following error:
+
+```
+Error loading shared library ld-linux-x86-64.so.2: No such file or directory.
+```
+
+The Snappy Java library is built specifically for glibc and does not support musl natively. The dynamic linking process fails, as musl doesn’t include the ld-linux-x86-64.so.2 library that glibc does. Ideally, we would have Snappy compiled for musl, but currently the snappy package for java is not compatible with musl out of the box and requires manually building the image.
+
+In previous versions of Snappy (before [1.1.9.0](https://github.com/xerial/snappy-java/pull/381/files)), there was a pure-Java mode that allowed Snappy to run on unsupported systems with a special flag. Unfortunately, this feature was removed in version 1.1.9.0 due to some issues like data corruption. Moreover, older versions of Snappy contain [critical security vulnerabilities](https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java), making them unsuitable for use.
+
+## Solving this compatibility issue
+
+While having Snappy natively compiled against musl would be the best solution for this problem, there is a workaround that leverages existing tools in the Alpine ecosystem. Alpine images provide compatibility packages like gcompat and libc6-compat, which include libraries to help run binaries compiled against glibc. It is important to refrain that this libraries only allow to run binaries that are already compiled using glibc and not and cannot be used to build software that requires glibc.
+
+In our case, the libc6-compat package includes the ld-linux-x86-64.so.2 library, which creates a symlink /lib64/ld-linux-x86-64.so.2 that points to /lib/libc.musl-x86_64.so.1. Since snappy looks for the lib under the /lib/ folder, by creating a symlink from /lib/ld-linux-x86-64.so.2 to /lib/ld-musl-x86_64.so.1, we were able to trick Snappy into finding the dependency it was looking for, thus resolving the issue.
+
+While this workaround might resolve the issue, it could introduce problems elsewhere in the application, as compatibility layers can cause unforeseen issues. The recommended solution is to compile the binary against your own system and do the necessary performance checks. I’ve submitted a pull request in the open source repository to ensure that future releases of Snappy Java will include this compatibility natively, eliminating the need for workarounds or manual compilation against a musl system.
+
+## Changes to base images should always be considered carefully
+
+Migrating to Alpine Linux offers significant benefits, such as smaller docker images and improved performance. However, it can also present challenges, especially when working with software tightly coupled to glibc, as is often the case with machine learning and data pipelines. 

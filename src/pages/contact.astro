@@ -1,0 +1,91 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+
+    <style>
+      h1 {
+        color: rgb(255, 255, 255);
+        font-size: 3em;
+      }
+
+      h2 {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+      }
+
+      a {
+        color: #0077cc;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #333;
+        color: white;
+      }
+
+      footer ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      footer ul li {
+        margin-bottom: 10px;
+      }
+
+      footer ul li a {
+        color: white;
+      }
+
+      .crypto-info {
+        background-color: #444;
+        padding: 15px;
+        margin-top: 20px;
+      }
+
+      .crypto-info p {
+        margin: 0;
+        font-size: 1.1em;
+      }
+    </style>
+  </head>
+  <body>
+    <Header title={SITE_TITLE} />
+
+    <main>
+      <h1>Contact Information</h2>
+      <p>Feel free to reach out via email:</p>
+      <p><a href="mailto:diogosamuelgfernandes@gmail.com">diogosamuelgfernandes@gmail.com</a></p>
+
+      <h2>Other Links</h2>
+      <ul>
+        <li><a href="https://github.com/samyuh">Github</a></li>
+      </ul>
+
+      <div class="crypto-info">
+        <h2>Cryptocurrency Support</h2>
+        <p>We accept donations in the following cryptocurrencies:</p>
+        <ul>
+          <li><b>Bitcoin:</b> #</li>
+          <li><b>Ethereum:</b> #</li>
+          <li><b>Solana:</b> #</li>
+        </ul>
+      </div>
+    </main>
+
+    <Footer />
+  </body>
+</html>
