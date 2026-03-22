@@ -7,61 +7,139 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import { getCollection } from 'astro:content';
 import FormattedDate from '../components/FormattedDate.astro';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf()
-);
+const posts = (await getCollection('blog'))
+	.filter((post) => post.data.listed !== false)
+	.sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-
-		<style>
-			h2 {
-				color: rgb(255, 255, 255);
-				font-size: 3em;
-				line-height: 1.3em;
-			}
-
-			a:hover {
-				text-decoration: underline;
-			}
-		</style>
 	</head>
 	<body>
-		<Header title={SITE_TITLE} />
+		<Header />
 		<main>
-			<div class="mt-4">
-				<div class="text-center" >
-					<h2 class="pb-8"><b>Hey! I am Samuel,<br> a Software Engineer</b></h2>
+			<section class="hero">
+				<p class="greeting">Hey, I'm</p>
+				<h1>Samuel Fernandes</h1>
+				<p class="tagline">Software Engineer · Feedzai</p>
+
+				<div class="bio">
 					<p>
-						I'm currently a Software Engineer working at Feedzai. 
-					</p>
-					
-					<p class="mt-2">I hold a M.Sc. degree in Informatics and Computer Engineering from FEUP.</p>
+						I'm a Software Engineer at <strong>Feedzai</strong>, working on the real-time payment
+					fraud detection product. It evaluates live payment transactions and decides, in
+					milliseconds, whether they're fraud or not.
+				</p>
 
-					<p class="mt-2">
-						My interests lie in the area of distributed systems, optimization and machine learning.
-					</p>
+				<p>Over the past couple of years I've been leading a few engineering initiatives:</p>
+					<ul>
+						<li>
+							Migrated the data science environment from on-premises and bare EC2 deployments to
+							<strong>Kubernetes</strong>, improving operational resilience and significantly
+							reducing infrastructure costs
+						</li>
+						<li>
+							Drove <strong>Graviton (ARM)</strong> architecture adoption, improving
+							price-performance across workloads
+						</li>
+						<li>
+							Leveraged <strong>KEDA</strong> and <strong>HPA</strong> to design a more robust and
+							cost-efficient autoscaling strategy for variable traffic
+						</li>
+					</ul>
+
+				<p>
+					I participate in the <strong>on-call rotation</strong>, supporting production incidents
+					related to the product I own. Once an incident is mitigated, I contribute to root cause
+					analysis, document findings and action items, and ensure timely follow-through until
+					issues are fully resolved.
+				</p>
+
+				<p>
+					I have an <strong>M.Sc. in Informatics and Computer Engineering</strong> from FEUP
+					(Universidade do Porto). My thesis was in machine learning, and I got a paper
+					published along the way.
+				</p>
+
+				<p>
+					My main stack is Java, Go, Python, Helm, Kubernetes, and AWS, though I pick up
+					whatever the work needs.
+				</p>
 				</div>
-			</div>
+			</section>
 
-			<div class="mt-32">
-				<h2 class="text-center"><b>Latest Posts</b></h1>
-					<section class="mt-8 text-center">
-						<ul>
-							{
-								posts.map((post) => (
-									<li class="hover-entry">
-										<p><FormattedDate date={post.data.pubDate} /> - <a href={`/blog/${post.slug}/`}> {post.data.title}</a></p>
-									</li>
-								))
-							}
-						</ul>
-					</section>
-			</div>
+			<section class="posts-section">
+				<p class="section-label">Latest Posts</p>
+				<ul class="posts-list">
+					{
+						posts.map((post) => (
+							<li>
+								<a href={`/blog/${post.slug}/`} class="post-row">
+									<span class="post-date"><FormattedDate date={post.data.pubDate} /></span>
+									<span class="post-body">
+										<span class="post-title">{post.data.title}</span>
+										<span class="post-desc">{post.data.description}</span>
+									</span>
+									<span class="post-arrow">→</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</section>
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	.hero {
+		padding: 1em 0 3.5em;
+	}
+	.greeting {
+		color: var(--accent);
+		font-size: 0.9rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		margin: 0 0 0.4em;
+	}
+	.hero h1 {
+		font-size: 2.75em;
+		margin: 0;
+		line-height: 1.1;
+	}
+	.tagline {
+		color: var(--text-muted);
+		font-size: 1.1rem;
+		margin: 0.5em 0 0;
+	}
+	.bio {
+		max-width: 720px;
+		margin-top: 2em;
+		color: var(--text-muted);
+		line-height: 1.8;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6em;
+	}
+	.bio p, .bio ul { margin: 0; }
+	.bio ul {
+		padding-left: 1.5em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35em;
+	}
+	.bio strong { color: var(--text-heading); }
+	.oncall {
+		font-size: 0.875rem;
+	}
+
+	.posts-section {
+		padding-top: 2.5em;
+		border-top: 1px solid var(--border);
+	}
+</style>

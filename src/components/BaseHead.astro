@@ -7,18 +7,65 @@ interface Props {
 	title: string;
 	description: string;
 	image?: string;
+	type?: 'website' | 'article';
+	publishedTime?: string;
+	modifiedTime?: string;
+	tags?: string[];
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const { title, description, image = '/blog-placeholder-1.jpg' } = Astro.props;
+const {
+	title,
+	description,
+	image = '/og-default.svg',
+	type = 'website',
+	publishedTime,
+	modifiedTime,
+	tags = []
+} = Astro.props;
+
+const imageURL = new URL(image, Astro.url);
 ---
 
+<script is:inline>
+	(function(){
+		var t=localStorage.getItem('theme');
+		if(t) document.documentElement.setAttribute('data-theme',t);
+	})();
+</script>
+<script is:inline>
+	(function () {
+		if (location.hostname !== 'localhost') return;
+		if (!('PerformanceObserver' in window)) return;
+
+		try {
+			var cls = 0;
+			new PerformanceObserver(function (list) {
+				for (var entry of list.getEntries()) {
+					if (!entry.hadRecentInput) cls += entry.value;
+				}
+				console.info('[perf] CLS', cls.toFixed(4));
+			}).observe({ type: 'layout-shift', buffered: true });
+
+			new PerformanceObserver(function (list) {
+				var entries = list.getEntries();
+				var last = entries[entries.length - 1];
+				if (last) console.info('[perf] LCP(ms)', Math.round(last.startTime));
+			}).observe({ type: 'largest-contentful-paint', buffered: true });
+		} catch {
+			// Ignore observer errors in older browsers.
+		}
+	})();
+</script>
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
 <meta name="generator" content={Astro.generator} />
+<meta name="robots" content="index,follow,max-image-preview:large" />
+<meta name="theme-color" content="#212121" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#f8f8f8" media="(prefers-color-scheme: light)" />
 
 <!-- Font preloads -->
 <link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
@@ -33,18 +80,23 @@ const { title, description, image = '/blog-placeholder-1.jpg' } = Astro.props;
 <meta name="description" content={description} />
 
 <!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
+<meta property="og:type" content={type} />
 <meta property="og:url" content={Astro.url} />
+<meta property="og:site_name" content="Samuh" />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={imageURL} />
+<meta property="og:image:alt" content={title} />
+{publishedTime && <meta property="article:published_time" content={publishedTime} />}
+{modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+{tags.map((tag) => <meta property="article:tag" content={tag} />)}
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={Astro.url} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta property="twitter:image" content={imageURL} />
 
 <!-- Google -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7802504104293927" crossorigin="anonymous"></script>

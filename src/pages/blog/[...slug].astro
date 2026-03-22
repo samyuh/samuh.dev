@@ -1,11 +1,9 @@
 ---
 import { CollectionEntry, getCollection } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
-import Heading from '../../layouts/Heading.astro';
-import Paragraph from '../../layouts/Paragraph.astro';
-import Code from '../../layouts/Code.astro';
 
 const posts = await getCollection('blog');
+const listedPosts = posts.filter((entry) => entry.data.listed !== false);
 type Props = CollectionEntry<'blog'>;
 
 const { slug } = Astro.params;
@@ -13,14 +11,31 @@ const post = posts.find((page) => page.slug === slug);
 if (!post) return Astro.redirect("/404");
 const { Content } = await post.render();
 
+const words = post.body.split(/\s+/).filter(Boolean).length;
+const readingTime = Math.max(1, Math.ceil(words / 220));
+
+const relatedPosts = listedPosts
+  .filter((candidate) => candidate.slug !== post.slug)
+  .map((candidate) => {
+    const overlap = candidate.data.tags.filter((tag) => post.data.tags.includes(tag)).length;
+    return { candidate, overlap };
+  })
+  .sort((a, b) => {
+    if (b.overlap !== a.overlap) return b.overlap - a.overlap;
+    return b.candidate.data.pubDate.valueOf() - a.candidate.data.pubDate.valueOf();
+  })
+  .slice(0, 3)
+  .map(({ candidate }) => candidate);
+
 export function getStaticPaths() {
-  return [
-    {params: {slug: 'first-post'}},
-    {params: {slug: 'musl-and-ml'}},
-  ];
+  return getCollection('blog').then((entries) =>
+    entries
+      .filter((entry) => entry.data.listed !== false)
+      .map((entry) => ({ params: { slug: entry.slug } }))
+  );
 }
 ---
 
-<BlogPost {...post.data}>
-	<Content components={{ h2: Heading, p: Paragraph, code: Code }} />
+<BlogPost {...post.data} readingTime={readingTime} relatedPosts={relatedPosts}>
+	<Content />
 </BlogPost>
